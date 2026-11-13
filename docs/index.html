@@ -272,7 +272,7 @@ function render(data) {
   for (const a of pf.accounts) {
     html += `<section class="acct">
       <div class="acct-head"><h2>${esc(a.name)}</h2><span class="num ${cls(a.pnl_pct)}">${pct(a.pnl_pct)}</span></div>
-      <p class="acct-sub">평가 ${won(a.value)}, 손익 <span class="${cls(a.pnl)}">${swon(a.pnl)}</span>, 오늘 <span class="${cls(a.day_change)}">${swon(a.day_change)}</span></p>`;
+      <p class="acct-sub">평가 ${won(a.value)}, 손익 <span class="${cls(a.pnl)}">${swon(a.pnl)}</span>, 오늘 <span class="${cls(a.day_change)}">${swon(a.day_change)}${a.day_change_pct != null ? ` (${pct(a.day_change_pct)})` : ""}</span></p>`;
     for (const r of a.holdings) {
       html += `<div class="row">
         <span class="name">${esc(r.name)}</span>

@@ -158,6 +158,7 @@ def build_portfolio(cfg: dict) -> dict:
             "name": acc["name"], "holdings": rows, "cost": a_cost, "value": a_value,
             "pnl": a_value - a_cost, "pnl_pct": (a_value / a_cost - 1) * 100 if a_cost else 0,
             "day_change": a_day,
+            "day_change_pct": a_day / (a_value - a_day) * 100 if a_value - a_day else 0,
         })
         t_cost += a_cost
         t_value += a_value
@@ -332,7 +333,7 @@ def build_notification(pf: dict, market: dict, show_amounts: bool) -> dict:
     if show_amounts:
         lines.append(f"평가 {won(pf['value']).lstrip('+')}, 손익 {won(pf['pnl'])}")
     for a in pf["accounts"]:
-        lines.append(f"{a['name']} {a['pnl_pct']:+.2f}%")
+        lines.append(f"{a['name']} {a['pnl_pct']:+.2f}%  (오늘 {a['day_change_pct']:+.2f}%)")
     if pf.get("market_status") == "CLOSE":
         lines.append("오늘은 휴장일이라 전 거래일 종가 기준이에요")
     if market_line(market, short=True):
