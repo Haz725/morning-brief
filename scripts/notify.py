@@ -11,7 +11,7 @@ NOTIFY_PATH = os.path.join(ROOT, ".notify.json")
 
 
 def main():
-    topic = os.environ.get("NTFY_TOPIC")
+    topic = os.environ.get("NTFY_TOPIC", "").strip()  # 붙여넣을 때 섞인 공백 제거
     if not topic:
         sys.exit("NTFY_TOPIC 시크릿이 필요합니다.")
     with open(NOTIFY_PATH, encoding="utf-8") as f:
