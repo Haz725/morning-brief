@@ -306,14 +306,15 @@ def market_line(market: dict, short: bool = False) -> str:
 
 # ───────────────────────── 실행 흐름 ─────────────────────────
 def wait_for_open():
-    """장 시작(09:01) 전이면 기다린다. 너무 이르면(30분 이상) 기다리지 않음."""
+    """목표 시각(TARGET_TIME, 기본 09:01) 전이면 기다린다. 너무 이르면(30분 이상) 기다리지 않음."""
     if os.environ.get("NO_WAIT") == "1":
         return
     now = dt.datetime.now(KST)
-    target = now.replace(hour=9, minute=1, second=0, microsecond=0)
+    hour, minute = map(int, os.environ.get("TARGET_TIME", "09:01").split(":"))
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     gap = (target - now).total_seconds()
     if 0 < gap <= 30 * 60:
-        print(f"장 시작까지 {int(gap)}초 대기합니다…")
+        print(f"{hour:02d}:{minute:02d}까지 {int(gap)}초 대기합니다…")
         time.sleep(gap)
 
 
@@ -333,7 +334,7 @@ def build_notification(pf: dict, market: dict, show_amounts: bool) -> dict:
     if show_amounts:
         lines.append(f"평가 {won(pf['value']).lstrip('+')}, 손익 {won(pf['pnl'])}")
     for a in pf["accounts"]:
-        lines.append(f"{a['name']} {a['pnl_pct']:+.2f}%  (오늘 {a['day_change_pct']:+.2f}%)")
+        lines.append(f"▶{a['name']} {a['pnl_pct']:+.2f}%  (오늘 {a['day_change_pct']:+.2f}%)")
     if pf.get("market_status") == "CLOSE":
         lines.append("오늘은 휴장일이라 전 거래일 종가 기준이에요")
     if market_line(market, short=True):
@@ -352,7 +353,7 @@ def main():
         sys.exit("APP_PASSWORD 시크릿이 필요합니다.")
     cfg = load_holdings()
 
-    # 1) 09:01 이후 현재가 조회 (환율도 그날 첫 고시가 반영되도록 장 시작 후에 수집)
+    # 1) 목표 시각(09:01 또는 15:00) 이후 현재가 조회 (환율도 그날 고시가 반영되도록 장 시작 후에 수집)
     wait_for_open()
     now = dt.datetime.now(KST)
     pf = build_portfolio(cfg)

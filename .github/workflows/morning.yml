@@ -3,8 +3,10 @@ name: 아침 브리핑
 on:
   schedule:
     # 한국 시간 평일 08:45 시작 → 09:01에 시세/간밤 시장/뉴스 수집 → 알림
-    # (GitHub 예약 실행은 수 분~수십 분 늦게 시작될 수 있어요)
+    # 한국 시간 평일 14:45 시작 → 15:00에 다시 수집 → 알림
+    # (GitHub 예약 실행은 수 분~수십 분 늦게 시작될 수 있어요. 아래 TARGET_TIME 조건과 cron 값을 같이 바꾸세요)
     - cron: "45 23 * * 0-4"
+    - cron: "45 5 * * 1-5"
   workflow_dispatch: {}   # Actions 탭에서 수동 실행(테스트용)
 
 permissions:
@@ -34,6 +36,7 @@ jobs:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
           NOTIFY_AMOUNTS: ${{ vars.NOTIFY_AMOUNTS || 'true' }}
           NO_WAIT: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+          TARGET_TIME: ${{ github.event.schedule == '45 5 * * 1-5' && '15:00' || '09:01' }}
         run: python scripts/brief.py
 
       - name: 결과 저장
