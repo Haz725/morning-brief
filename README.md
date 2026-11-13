@@ -60,7 +60,14 @@ gh secret set HOLDINGS_JSON
 |---|---|
 | `APP_PASSWORD` | 앱을 열 때 쓸 비밀번호 (길게) |
 | `NTFY_TOPIC` | 3번에서 정한 토픽 이름 |
-| `HOLDINGS_JSON` | 보유 종목 (`holdings.example.json` 형식, 한 줄로 붙여넣어도 돼요) |
+| `HOLDINGS_JSON` | 보유 종목 (`holdings.example.json` 형식) |
+
+`HOLDINGS_JSON` 은 `holdings.json` 을 채운 뒤 파일째로 넣는 게 편해요. Windows PowerShell 에서
+`Get-Content … | gh secret set` 으로 넘기면 한글이 깨지니, 아래처럼 `cmd` 로 넣으세요.
+
+```bash
+cmd /c "gh secret set HOLDINGS_JSON < holdings.json"
+```
 
 변수(Variables):
 
