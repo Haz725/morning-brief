@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F4F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C131D" media="(prefers-color-scheme: dark)">
+<title>아침 브리핑</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#142033; --muted:#5E6B7E; --rule:#D3D9E2;
+  --up:#D62839; --down:#1D5BD6; --flat:#5E6B7E; --soft:#E6EAF0;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --fig:"IBM Plex Sans Condensed","IBM Plex Sans KR",system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0C131D;--surface:#141D2A;--ink:#E6EBF2;--muted:#8C99AB;--rule:#263244;
+    --up:#FF5468;--down:#5C9BFF;--flat:#8C99AB;--soft:#1B2636;color-scheme:dark}
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.6 var(--body);
+  -webkit-font-smoothing:antialiased;word-break:keep-all}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  background:var(--bg);z-index:10}
+.wrap{max-width:560px;margin:0 auto;padding:0 20px 48px}
+.num{font-family:var(--fig);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+
+/* 상단 */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  padding:14px 0 10px}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.stamp{font-size:13px;color:var(--muted)}
+.icon-btn{background:none;border:0;padding:6px 8px;color:var(--muted);font-size:13px;cursor:pointer}
+.seg{display:grid;grid-template-columns:1fr 1fr;margin-top:10px;background:var(--soft);
+  border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:9px 0;border-radius:8px;font-weight:500;
+  font-size:14px;color:var(--muted);cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink)}
+
+/* 본전선 히어로 */
+.hero{position:relative;margin:18px 0 6px;height:230px;display:flex;flex-direction:column}
+.hero svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hero .figure{position:relative;z-index:1}
+.hero.pos .figure{margin-top:0}
+.hero.neg .figure{margin-top:auto}
+.big{font:600 clamp(64px,22vw,104px)/0.95 var(--fig);letter-spacing:-0.02em;margin:0}
+.big small{font-size:0.45em;font-weight:500;margin-left:2px}
+.cap{font-size:13px;color:var(--muted);margin:4px 0 0}
+.line-label{position:absolute;right:0;font-size:12px;color:var(--muted);background:var(--bg);
+  padding:0 0 0 6px;transform:translateY(-50%)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 0 18px;
+  border-bottom:1px solid var(--rule)}
+.stats div{min-width:0}
+.stats dt{font-size:12px;color:var(--muted)}
+.stats dd{margin:2px 0 0;font:500 17px/1.3 var(--fig);font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}
+
+.teaser{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--rule);
+  border-radius:12px;padding:14px 16px;margin:18px 0 8px;cursor:pointer}
+.teaser p{margin:0}
+.teaser .go{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* 계좌 */
+.acct{margin-top:28px}
+.acct-head{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.acct-head h2{font-size:16px;font-weight:600;margin:0}
+.acct-head .num{font-size:18px;font-weight:600}
+.acct-sub{font-size:13px;color:var(--muted);margin:6px 0 0}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.row .name{font-weight:500;line-height:1.4}
+.row .pct{font:600 19px/1.3 var(--fig);text-align:right}
+.row .meta{font-size:13px;color:var(--muted)}
+.row .meta.r{text-align:right}
+.row .up{color:var(--up)} .row .down{color:var(--down)}
+.row .err{grid-column:1/-1;font-size:13px;color:var(--up)}
+
+/* 브리핑 */
+.headline{font-size:21px;line-height:1.5;font-weight:600;margin:22px 0 4px}
+.b-sec{margin-top:30px}
+.b-sec h2{font-size:14px;font-weight:600;color:var(--muted);margin:0 0 10px}
+.b-sec p{margin:0 0 10px}
+.ix{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--rule)}
+.ix:last-child{border-bottom:1px solid var(--rule)}
+.ix .n{font-weight:500}
+.ix .note{font-size:13px;color:var(--muted);margin-top:2px}
+.ix .v{font:600 17px/1.4 var(--fig);white-space:nowrap}
+.fx{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.fx .num{font-size:28px;font-weight:600}
+.news a{display:block;color:var(--ink);padding:10px 0;text-decoration:none;
+  border-top:1px solid var(--rule);overflow-wrap:anywhere}
+.news a:last-child{border-bottom:1px solid var(--rule)}
+.news .t{display:block;line-height:1.45}
+.news .s{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.ask{margin:18px 0 4px}
+.ask .primary{width:100%;background:var(--ink);color:var(--bg);border:0;border-radius:12px;
+  padding:14px;font-weight:600;font-size:15px;cursor:pointer}
+.ask .hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.copied{background:var(--soft);border-radius:10px;padding:10px 14px;font-size:14px;margin-top:10px}
+.copied a{color:inherit;font-weight:600}
+.err-txt{font-size:13px;color:var(--muted)}
+.note-box{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:14px;margin:18px 0}
+.foot{font-size:12px;color:var(--muted);margin-top:36px}
+
+/* 잠금/빈 화면 */
+.gate{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.gate h1{font-size:24px;margin:0}
+.gate p{margin:0;color:var(--muted)}
+.gate input{font:inherit;font-size:17px;padding:12px 14px;border:1px solid var(--rule);border-radius:10px;
+  background:var(--surface);color:var(--ink);width:100%}
+.gate .primary{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:13px;
+  font-weight:600;cursor:pointer}
+.gate .msg{color:var(--up);font-size:14px;min-height:1.4em}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="gate" class="gate" hidden>
+    <h1>아침 브리핑</h1>
+    <p>설정할 때 정한 앱 비밀번호를 입력하세요. 이 기기에만 저장돼요.</p>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="앱 비밀번호">
+    <button class="primary" id="unlock">열기</button>
+    <div class="msg" id="gate-msg" role="alert"></div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="top">
+      <div class="top-row">
+        <span class="stamp" id="stamp"></span>
+        <span>
+          <button class="icon-btn" id="reload">새로고침</button>
+          <button class="icon-btn" id="lock">잠그기</button>
+        </span>
+      </div>
+      <div class="seg" role="tablist">
+        <button role="tab" id="tab-pf" aria-selected="true" data-tab="pf">내 수익률</button>
+        <button role="tab" id="tab-brief" aria-selected="false" data-tab="brief">아침 브리핑</button>
+      </div>
+    </div>
+    <section id="pf" role="tabpanel" aria-labelledby="tab-pf"></section>
+    <section id="brief" role="tabpanel" aria-labelledby="tab-brief" hidden></section>
+  </div>
+</div>
+
+<script>
+const PW_KEY = "mb-password";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cls = v => v > 0 ? "up" : v < 0 ? "down" : "flat";
+const pct = (v, d = 2) => v == null || isNaN(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(d) + "%";
+const won = v => Math.round(v).toLocaleString("ko-KR") + "원";
+const swon = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v)).toLocaleString("ko-KR") + "원";
+const man = v => {
+  const a = Math.abs(v), s = v < 0 ? "−" : "";
+  if (a >= 1e8) return s + (a / 1e8).toFixed(2) + "억";
+  if (a >= 1e4) return s + Math.round(a / 1e4).toLocaleString("ko-KR") + "만";
+  return s + Math.round(a).toLocaleString("ko-KR");
+};
+
+function storage(op, v) {
+  try {
+    if (op === "get") return localStorage.getItem(PW_KEY);
+    if (op === "set") localStorage.setItem(PW_KEY, v);
+    if (op === "del") localStorage.removeItem(PW_KEY);
+  } catch (e) { return null; }
+}
+
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decrypt(blob, pw) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: b64(blob.salt), iterations: blob.iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+async function load(pw) {
+  let res;
+  try { res = await fetch("data.enc.json?t=" + Date.now(), { cache: "no-store" }); }
+  catch (e) { throw { kind: "net" }; }
+  if (res.status === 404) throw { kind: "empty" };
+  if (!res.ok) throw { kind: "net" };
+  const blob = await res.json();
+  try { return await decrypt(blob, pw); } catch (e) { throw { kind: "pw" }; }
+}
+
+function showGate(msg = "") {
+  $("#app").hidden = true; $("#gate").hidden = false;
+  $("#gate-msg").textContent = msg; $("#pw").value = ""; $("#pw").focus();
+}
+
+async function start(pw) {
+  try {
+    const data = await load(pw);
+    storage("set", pw);
+    render(data);
+    $("#gate").hidden = true; $("#app").hidden = false;
+  } catch (e) {
+    if (e.kind === "pw") { storage("del"); showGate("비밀번호가 맞지 않아요. 다시 입력하세요."); }
+    else if (e.kind === "empty") showGate("아직 첫 브리핑이 없어요. GitHub Actions에서 '아침 브리핑'을 한 번 실행하세요.");
+    else showGate("데이터를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침하세요.");
+  }
+}
+
+/* ── 본전선 히어로 ── */
+function heroSVG(history, cur) {
+  const pts = (history || []).map(h => h.pnl_pct).filter(v => typeof v === "number");
+  if (!pts.length) pts.push(cur);
+  const W = 100, H = 100;
+  const max = Math.max(0, ...pts), min = Math.min(0, ...pts);
+  const span = (max - min) || 1;
+  // 본전선 위치: 수익이면 아래쪽, 손실이면 위쪽에 두어 숫자 공간을 확보
+  const top = cur >= 0 ? 52 : 8, bottom = cur >= 0 ? 92 : 48;
+  const y = v => top + (max - v) / span * (bottom - top);
+  const zero = y(0);
+  const step = pts.length > 1 ? W / (pts.length - 1) : 0;
+  const d = pts.map((v, i) => (i ? "L" : "M") + (pts.length > 1 ? i * step : W).toFixed(2) + " " + y(v).toFixed(2)).join(" ");
+  const c = cls(cur);
+  const area = pts.length > 1 ? `<path d="${d} L ${W} ${zero} L 0 ${zero} Z" fill="var(--${c === "flat" ? "flat" : c})" opacity=".09"/>` : "";
+  return {
+    zero,
+    svg: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      ${area}
+      <line x1="0" x2="${W}" y1="${zero}" y2="${zero}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>
+      ${pts.length > 1 ? `<path d="${d}" fill="none" stroke="var(--${c})" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` : ""}
+    </svg>`
+  };
+}
+
+function render(data) {
+  const pf = data.portfolio, gen = new Date(data.generated_at);
+  $("#stamp").textContent = gen.toLocaleString("ko-KR", { month: "long", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" }) + " 기준";
+  const c = cls(pf.pnl_pct);
+  const h = heroSVG(data.history, pf.pnl_pct);
+  const days = (data.history || []).length;
+  const closed = pf.market_status === "CLOSE";
+
+  let html = `
+    <div class="hero ${pf.pnl_pct >= 0 ? "pos" : "neg"}">
+      ${h.svg}
+      <span class="line-label" style="top:${h.zero}%">본전</span>
+      <div class="figure">
+        <p class="big num ${c}">${pf.pnl_pct > 0 ? "+" : pf.pnl_pct < 0 ? "−" : ""}${Math.abs(pf.pnl_pct).toFixed(2)}<small>%</small></p>
+        <p class="cap">전체 수익률${days > 1 ? `, 최근 ${days}일 흐름` : ""}</p>
+      </div>
+    </div>
+    <dl class="stats">
+      <div><dt>평가금액</dt><dd>${man(pf.value)}원</dd></div>
+      <div><dt>손익</dt><dd class="${cls(pf.pnl)}">${pf.pnl > 0 ? "+" : ""}${man(pf.pnl)}원</dd></div>
+      <div><dt>오늘</dt><dd class="${cls(pf.day_change)}">${pct(pf.day_change_pct)}</dd></div>
+    </dl>
+    ${closed ? `<div class="note-box">오늘은 휴장일이라 전 거래일 종가 기준이에요.</div>` : ""}
+    ${data.market?.headline ? `<button class="teaser" data-go="brief"><p>${esc(data.market.headline)}</p><p class="go">아침 브리핑 보기</p></button>` : ""}`;
+
+  for (const a of pf.accounts) {
+    html += `<section class="acct">
+      <div class="acct-head"><h2>${esc(a.name)}</h2><span class="num ${cls(a.pnl_pct)}">${pct(a.pnl_pct)}</span></div>
+      <p class="acct-sub">평가 ${won(a.value)}, 손익 <span class="${cls(a.pnl)}">${swon(a.pnl)}</span>, 오늘 <span class="${cls(a.day_change)}">${swon(a.day_change)}</span></p>`;
+    for (const r of a.holdings) {
+      html += `<div class="row">
+        <span class="name">${esc(r.name)}</span>
+        <span class="pct num ${cls(r.pnl_pct)}">${r.error ? "–" : pct(r.pnl_pct)}</span>
+        <span class="meta">${r.qty.toLocaleString("ko-KR")}주, 평단 ${won(r.avg)}</span>
+        <span class="meta r num">${r.error ? "" : `${won(r.price)} <span class="${cls(r.day_change_pct)}">${pct(r.day_change_pct)}</span>`}</span>
+        ${r.error ? `<span class="err">${esc(r.error)}</span>` : `<span class="meta">평가 ${won(r.value)}</span><span class="meta r ${cls(r.pnl)}">${swon(r.pnl)}</span>`}
+      </div>`;
+    }
+    html += `</section>`;
+  }
+  html += `<p class="foot">평단과 수량은 직접 입력한 값이에요. 매매 후에는 GitHub의 HOLDINGS_JSON을 고쳐주세요.</p>`;
+  $("#pf").innerHTML = html;
+  $("#brief").innerHTML = renderBrief(data);
+  $$("[data-go]").forEach(b => b.onclick = () => setTab(b.dataset.go));
+  $("#ask-claude").onclick = () => askClaude(data);
+}
+const $$ = s => document.querySelectorAll(s);
+
+const price = (v, d = 2) => Number(v).toLocaleString("ko-KR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const hm = s => { const d = new Date(s); return isNaN(d) ? "" : d.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }); };
+
+function quoteRows(list) {
+  return (list || []).map(q => `<div class="ix"><div><div class="n">${esc(q.name)}</div>
+    <div class="note">${q.error ? `<span class="err-txt">${esc(q.error)}</span>` : `${price(q.price)}, ${q.change > 0 ? "+" : ""}${price(q.change)}`}</div></div>
+    <span class="v ${q.error ? "flat" : cls(q.change_pct)}">${q.error ? "–" : pct(q.change_pct)}</span></div>`).join("");
+}
+
+function renderBrief(data) {
+  const m = data.market || {}, fx = m.fx || {};
+  let h = m.headline ? `<p class="headline">${esc(m.headline)}</p>` : "";
+  h += `<div class="ask"><button class="primary" id="ask-claude">Claude로 분석하기</button>
+    <p class="hint">오늘 데이터와 내 수익률로 분석 요청문을 복사하고 claude.ai를 열어요.</p>
+    <div class="copied" id="copied" role="status" hidden></div></div>`;
+  if (m.indices?.length) h += `<section class="b-sec"><h2>간밤 미국 지수</h2>${quoteRows(m.indices)}</section>`;
+  if (m.stocks?.length) h += `<section class="b-sec"><h2>반도체·빅테크</h2>${quoteRows(m.stocks)}</section>`;
+  h += `<section class="b-sec"><h2>원/달러 환율</h2>`;
+  if (fx.price != null) {
+    h += `<div class="fx"><span class="num">${price(fx.price, 1)}원</span>
+      <span class="num ${cls(fx.change)}">${fx.change > 0 ? "+" : ""}${Number(fx.change).toFixed(1)}원 (${pct(fx.change_pct)})</span></div>
+      <p class="err-txt">${fx.traded_at ? hm(fx.traded_at) + " 기준, " : ""}전일 대비</p>`;
+  } else h += `<p class="err-txt">환율을 가져오지 못했어요</p>`;
+  h += `</section>`;
+  h += `<section class="b-sec news"><h2>최근 24시간 뉴스</h2>`;
+  h += data.news?.length
+    ? data.news.map(n => `<a href="${esc(n.url)}" target="_blank" rel="noopener"><span class="t">${esc(n.title)}</span><span class="s">${esc(n.source)}${n.published ? " · " + hm(n.published) : ""}</span></a>`).join("")
+    : `<p class="err-txt">뉴스를 가져오지 못했어요</p>`;
+  h += `</section>`;
+  h += `<p class="foot">시세는 네이버 금융, 뉴스는 구글 뉴스에서 자동으로 모은 자료예요. 투자 권유가 아니며, 숫자는 출처에서 한 번 더 확인하세요.</p>`;
+  return h;
+}
+
+/* ── Claude로 분석하기: 요청문을 클립보드에 복사하고 claude.ai 열기 ── */
+function buildPrompt(data) {
+  const m = data.market || {}, pf = data.portfolio, fx = m.fx || {};
+  const day = new Date(data.generated_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+  const q = x => x.error ? `${x.name}: 데이터 없음` : `${x.name}: ${price(x.price)} (${pct(x.change_pct)})`;
+  const etfs = {};
+  for (const a of pf.accounts) for (const r of a.holdings) {
+    const e = etfs[r.code] ||= { name: r.name, code: r.code, value: 0, cost: 0, day: r.day_change_pct, err: r.error };
+    if (!r.error) { e.value += r.value; e.cost += r.cost; }
+  }
+  const lines = [
+    `오늘은 ${day} 한국 시간 오전입니다. 아래는 오늘 아침 자동으로 모은 데이터입니다.`,
+    ``, `[간밤 미국 지수]`, ...(m.indices || []).map(q),
+    ``, `[반도체·빅테크 종목]`, ...(m.stocks || []).map(q),
+    ``, `[원/달러 환율]`, fx.price != null ? `${price(fx.price, 1)}원, 전일 대비 ${fx.change > 0 ? "+" : ""}${Number(fx.change).toFixed(1)}원 (${pct(fx.change_pct)})` : "데이터 없음",
+    ``, `[최근 24시간 뉴스 제목]`, ...(data.news || []).map(n => `- ${n.title} (${n.source})`),
+    ``, `[내 보유 ETF (한국 상장)]`,
+    ...Object.values(etfs).map(e => e.err ? `- ${e.name}(${e.code}): 시세 없음`
+      : `- ${e.name}(${e.code}): 수익률 ${pct((e.value / e.cost - 1) * 100)}, 오늘 ${pct(e.day)}, 비중 ${pf.value ? (e.value / pf.value * 100).toFixed(0) : 0}%`),
+    `전체 수익률 ${pct(pf.pnl_pct)}, 오늘 ${pct(pf.day_change_pct)}`,
+    ``, `위 데이터와 필요하면 최신 웹 검색을 바탕으로 다음을 한국어로 정리해 주세요.`,
+    `1. 간밤 미국장 요약과 주요 원인`,
+    `2. 환율 변화가 내 ETF(환노출 여부 포함)에 주는 영향`,
+    `3. 오늘 국내 상장 ETF의 시초가 방향 예상`,
+    `4. 보유 ETF별 단기 전망`,
+    `5. 이번 주 남은 주요 일정 (경제지표, 연준, 주요 기업 실적)`,
+    `6. 단기 리스크 요인과 기대 요인`,
+    ``, `매수·매도 권유가 아니라 정보 요약으로 작성해 주세요. 숫자는 확인된 값만 쓰고, 추정은 추정이라고 밝혀 주세요.`,
+  ];
+  return lines.join("\n");
+}
+
+function legacyCopy(text) {
+  const t = document.createElement("textarea");
+  t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;top:-1000px;opacity:0";
+  document.body.appendChild(t); t.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  t.remove();
+  return ok;
+}
+
+async function askClaude(data) {
+  const text = buildPrompt(data), box = $("#copied");
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = legacyCopy(text); }
+  box.hidden = false;
+  box.innerHTML = ok
+    ? `✓ 분석 요청문을 복사했어요. Claude 입력창에 붙여넣기 하세요. 창이 안 열리면 <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai 열기</a>`
+    : `복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.`;
+  if (ok) window.open("https://claude.ai/new", "_blank", "noopener");
+}
+
+function setTab(name) {
+  for (const t of ["pf", "brief"]) {
+    $("#" + t).hidden = t !== name;
+    $("#tab-" + t).setAttribute("aria-selected", String(t === name));
+  }
+  window.scrollTo(0, 0);
+}
+$$(".seg button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$("#unlock").onclick = () => { const v = $("#pw").value; if (v) start(v); };
+$("#pw").onkeydown = e => { if (e.key === "Enter") $("#unlock").click(); };
+$("#reload").onclick = () => { const pw = storage("get"); if (pw) start(pw); };
+$("#lock").onclick = () => { storage("del"); showGate(); };
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+const saved = storage("get");
+saved ? start(saved) : showGate();
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+name: 아침 브리핑
+
+on:
+  schedule:
+    # 한국 시간 평일 08:45 시작 → 09:01에 시세/간밤 시장/뉴스 수집 → 알림
+    # (GitHub 예약 실행은 수 분~수십 분 늦게 시작될 수 있어요)
+    - cron: "45 23 * * 0-4"
+  workflow_dispatch: {}   # Actions 탭에서 수동 실행(테스트용)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: morning-brief
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 시세·뉴스 수집 + 수익률 계산
+        env:
+          HOLDINGS_JSON: ${{ secrets.HOLDINGS_JSON }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          NOTIFY_AMOUNTS: ${{ vars.NOTIFY_AMOUNTS || 'true' }}
+          NO_WAIT: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+        run: python scripts/brief.py
+
+      - name: 결과 저장
+        run: |
+          git config user.name "morning-brief-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/data.enc.json
+          git diff --cached --quiet || git commit -m "브리핑 $(TZ=Asia/Seoul date +%F)"
+          git push
+
+      - name: 앱 반영 대기 후 알림 전송
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          sleep 60
+          python scripts/notify.py

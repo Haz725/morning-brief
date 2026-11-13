@@ -1,0 +1,17 @@
+{
+  "accounts": [
+    {
+      "name": "계좌 1",
+      "holdings": [
+        { "name": "KODEX 미국나스닥100", "code": "종목코드6자리", "qty": 100, "avg": 18500 }
+      ]
+    },
+    {
+      "name": "계좌 2",
+      "holdings": [
+        { "name": "KODEX 미국나스닥100", "code": "종목코드6자리", "qty": 50, "avg": 19200 },
+        { "name": "TIGER 미국필라델피아반도체나스닥", "code": "종목코드6자리", "qty": 80, "avg": 21000 }
+      ]
+    }
+  ]
+}
