@@ -37,6 +37,7 @@ jobs:
           NOTIFY_AMOUNTS: ${{ vars.NOTIFY_AMOUNTS || 'true' }}
           NO_WAIT: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
           TARGET_TIME: ${{ github.event.schedule == '45 5 * * 1-5' && '15:00' || '09:01' }}
+          SKIP_HOLIDAYS: ${{ github.event_name == 'schedule' && '1' || '0' }}
         run: python scripts/brief.py
 
       - name: 결과 저장
@@ -52,5 +53,6 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           APP_URL: ${{ vars.APP_URL }}
         run: |
+          if [ ! -f .notify.json ]; then echo "주말·공휴일이라 알림을 보내지 않아요"; exit 0; fi
           sleep 60
           python scripts/notify.py

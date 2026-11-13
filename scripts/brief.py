@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
+import holidays
 import requests
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -305,6 +306,13 @@ def market_line(market: dict, short: bool = False) -> str:
 
 
 # ───────────────────────── 실행 흐름 ─────────────────────────
+def day_off(day: dt.date):
+    """주말이나 한국 공휴일(대체공휴일, 선거일 포함)이면 그 이름을, 아니면 None."""
+    if day.weekday() >= 5:
+        return "주말"
+    return holidays.KR(years=day.year, language="ko").get(day)
+
+
 def wait_for_open():
     """목표 시각(TARGET_TIME, 기본 09:01) 전이면 기다린다. 너무 이르면(30분 이상) 기다리지 않음."""
     if os.environ.get("NO_WAIT") == "1":
@@ -352,6 +360,14 @@ def main():
     if not password:
         sys.exit("APP_PASSWORD 시크릿이 필요합니다.")
     cfg = load_holdings()
+
+    # 예약 실행은 주말·공휴일이면 데이터도 알림도 만들지 않는다 (수동 실행은 항상 진행)
+    off = day_off(dt.datetime.now(KST).date())
+    if off and os.environ.get("SKIP_HOLIDAYS") == "1":
+        if os.path.exists(NOTIFY_PATH):
+            os.remove(NOTIFY_PATH)
+        print(f"오늘은 {off}이라 건너뜁니다.")
+        return
 
     # 1) 목표 시각(09:01 또는 15:00) 이후 현재가 조회 (환율도 그날 고시가 반영되도록 장 시작 후에 수집)
     wait_for_open()
