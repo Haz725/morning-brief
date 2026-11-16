@@ -314,14 +314,15 @@ def day_off(day: dt.date):
 
 
 def wait_for_open():
-    """목표 시각(TARGET_TIME, 기본 09:01) 전이면 기다린다. 너무 이르면(30분 이상) 기다리지 않음."""
+    """목표 시각(TARGET_TIME, 기본 09:01) 전이면 기다린다. 너무 이르면(90분 넘게) 기다리지 않음.
+    예약 실행이 늦을 때를 대비해 75분 전부터 시작하므로 최대 대기는 그보다 넉넉하게 둔다."""
     if os.environ.get("NO_WAIT") == "1":
         return
     now = dt.datetime.now(KST)
     hour, minute = map(int, os.environ.get("TARGET_TIME", "09:01").split(":"))
     target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     gap = (target - now).total_seconds()
-    if 0 < gap <= 30 * 60:
+    if 0 < gap <= 90 * 60:
         print(f"{hour:02d}:{minute:02d}까지 {int(gap)}초 대기합니다…")
         time.sleep(gap)
 

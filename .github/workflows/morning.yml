@@ -2,11 +2,16 @@ name: 아침 브리핑
 
 on:
   schedule:
-    # 한국 시간 평일 08:45 시작 → 09:01에 시세/간밤 시장/뉴스 수집 → 알림
-    # 한국 시간 평일 14:45 시작 → 15:00에 다시 수집 → 알림
-    # (GitHub 예약 실행은 수 분~수십 분 늦게 시작될 수 있어요. 아래 TARGET_TIME 조건과 cron 값을 같이 바꾸세요)
-    - cron: "45 23 * * 0-4"
-    - cron: "45 5 * * 1-5"
+    # GitHub 예약 실행은 수십 분 늦거나 아예 빠질 때가 있어서, 회차마다 세 번씩 일찍 걸어둔다.
+    # 먼저 시작한 실행이 09:01 / 15:00 까지 기다렸다가 알림을 보내고, 나머지는 이미 보낸 걸 확인하고 끝난다.
+    # 오전: 한국 시간 평일 07:47, 08:07, 08:27 시작 (UTC 일~목)
+    - cron: "47 22 * * 0-4"
+    - cron: "7 23 * * 0-4"
+    - cron: "27 23 * * 0-4"
+    # 오후: 한국 시간 평일 13:47, 14:07, 14:27 시작 (UTC 월~금)
+    - cron: "47 4 * * 1-5"
+    - cron: "7 5 * * 1-5"
+    - cron: "27 5 * * 1-5"
   workflow_dispatch: {}   # Actions 탭에서 수동 실행(테스트용)
 
 permissions:
@@ -19,36 +24,56 @@ concurrency:
 jobs:
   brief:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 30   # 최근 커밋 메시지로 이미 보낸 회차인지 확인
+
+      - name: 회차 확인 (이미 보냈으면 건너뜀)
+        id: slot
+        run: |
+          DAY=$(TZ=Asia/Seoul date +%F)
+          if [ "$(TZ=Asia/Seoul date +%H)" -lt 12 ]; then SLOT=오전; TARGET=09:01; else SLOT=오후; TARGET=15:00; fi
+          # 수동 실행은 예약 회차를 막지 않도록 다른 이름으로 커밋
+          if [ "${{ github.event_name }}" = "schedule" ]; then LABEL="$DAY $SLOT"; else LABEL="$DAY 수동"; fi
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "schedule" ] && git log -1 --format=%s --grep="^브리핑 $DAY $SLOT" | grep -q .; then
+            echo "$DAY $SLOT 알림은 이미 보냈어요"; echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-python@v5
+        if: steps.slot.outputs.skip != '1'
         with:
           python-version: "3.12"
 
       - name: 패키지 설치
+        if: steps.slot.outputs.skip != '1'
         run: pip install -r requirements.txt
 
       - name: 시세·뉴스 수집 + 수익률 계산
+        if: steps.slot.outputs.skip != '1'
         env:
           HOLDINGS_JSON: ${{ secrets.HOLDINGS_JSON }}
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
           NOTIFY_AMOUNTS: ${{ vars.NOTIFY_AMOUNTS || 'true' }}
           NO_WAIT: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
-          TARGET_TIME: ${{ github.event.schedule == '45 5 * * 1-5' && '15:00' || '09:01' }}
+          TARGET_TIME: ${{ steps.slot.outputs.target }}
           SKIP_HOLIDAYS: ${{ github.event_name == 'schedule' && '1' || '0' }}
         run: python scripts/brief.py
 
       - name: 결과 저장
+        if: steps.slot.outputs.skip != '1'
         run: |
           git config user.name "morning-brief-bot"
           git config user.email "bot@users.noreply.github.com"
           git add docs/data.enc.json
-          git diff --cached --quiet || git commit -m "브리핑 $(TZ=Asia/Seoul date +%F)"
+          git diff --cached --quiet || git commit -m "브리핑 ${{ steps.slot.outputs.label }}"
           git push
 
       - name: 앱 반영 대기 후 알림 전송
+        if: steps.slot.outputs.skip != '1'
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           APP_URL: ${{ vars.APP_URL }}
