@@ -284,10 +284,10 @@ def fetch_news(now: dt.datetime) -> list:
 
 
 def collect_market() -> dict:
+    """간밤 미국 지수와 종목. 환율은 목표 시각 이후에 따로 넣는다."""
     return {
         "indices": [fetch_quote(*i) for i in INDICES],
         "stocks": [fetch_quote(*s) for s in STOCKS],
-        "fx": fetch_fx(),
     }
 
 
@@ -313,17 +313,17 @@ def day_off(day: dt.date):
     return holidays.KR(years=day.year, language="ko").get(day)
 
 
-def wait_for_open():
-    """목표 시각(TARGET_TIME, 기본 09:01) 전이면 기다린다. 너무 이르면(90분 넘게) 기다리지 않음.
-    예약 실행이 늦을 때를 대비해 75분 전부터 시작하므로 최대 대기는 그보다 넉넉하게 둔다."""
+def wait_until(seconds_before: int = 0):
+    """목표 시각(TARGET_TIME, 예: 09:00:10)보다 seconds_before 초 앞선 때까지 기다린다.
+    예약 실행이 늦을 때를 대비해 75분 전부터 시작하므로 최대 대기는 90분으로 둔다."""
     if os.environ.get("NO_WAIT") == "1":
         return
     now = dt.datetime.now(KST)
-    hour, minute = map(int, os.environ.get("TARGET_TIME", "09:01").split(":"))
-    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    gap = (target - now).total_seconds()
+    h, m, *sec = map(int, os.environ.get("TARGET_TIME", "09:00:10").split(":"))
+    target = now.replace(hour=h, minute=m, second=sec[0] if sec else 0, microsecond=0)
+    gap = (target - now).total_seconds() - seconds_before
     if 0 < gap <= 90 * 60:
-        print(f"{hour:02d}:{minute:02d}까지 {int(gap)}초 대기합니다…")
+        print(f"{target - dt.timedelta(seconds=seconds_before):%H:%M:%S}까지 {int(gap)}초 대기합니다…")
         time.sleep(gap)
 
 
@@ -370,15 +370,17 @@ def main():
         print(f"오늘은 {off}이라 건너뜁니다.")
         return
 
-    # 1) 목표 시각(09:01 또는 15:00) 이후 현재가 조회 (환율도 그날 고시가 반영되도록 장 시작 후에 수집)
-    wait_for_open()
+    # 1) 목표 시각 1분 전에 간밤 미국장과 뉴스를 미리 모아 둔다 (각 항목이 실패해도 나머지는 계속)
+    wait_until(60)
+    market = collect_market()
+    news = fetch_news(dt.datetime.now(KST))
+
+    # 2) 정각(09:00:10 / 15:00:00)에 현재가와 환율만 빠르게 조회 → 바로 알림
+    wait_until(0)
     now = dt.datetime.now(KST)
     pf = build_portfolio(cfg)
-
-    # 2) 간밤 미국장, 환율, 뉴스 (각 항목이 실패해도 나머지는 계속)
-    market = collect_market()
+    market["fx"] = fetch_fx()
     market["headline"] = market_line(market)
-    news = fetch_news(now)
 
     # 3) 수익률 기록 (같은 날짜는 덮어씀)
     today = now.strftime("%Y-%m-%d")
