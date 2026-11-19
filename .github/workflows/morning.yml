@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main         # 예약 당시 커밋이 아니라 최신 main 으로 작업
           fetch-depth: 30   # 최근 커밋 메시지로 이미 보낸 회차인지 확인
 
       - name: 회차 확인 (이미 보냈으면 건너뜀)
@@ -39,7 +40,9 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then LABEL="$DAY $SLOT"; else LABEL="$DAY 수동"; fi
           echo "label=$LABEL" >> "$GITHUB_OUTPUT"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.event_name }}" = "schedule" ] && git log -1 --format=%s --grep="^브리핑 $DAY $SLOT" | grep -q .; then
+          # checkout 은 실행이 예약된 순간의 커밋을 받아오므로, 앞선 실행이 남긴 기록을 보려면 최신 main 을 다시 받는다
+          git fetch -q --depth=30 origin main
+          if [ "${{ github.event_name }}" = "schedule" ] && git log -1 --format=%s --grep="^브리핑 $DAY $SLOT" origin/main | grep -q .; then
             echo "$DAY $SLOT 알림은 이미 보냈어요"; echo "skip=1" >> "$GITHUB_OUTPUT"
           fi
 
@@ -79,4 +82,5 @@ jobs:
           git config user.email "bot@users.noreply.github.com"
           git add docs/data.enc.json
           git diff --cached --quiet || git commit -m "브리핑 ${{ steps.slot.outputs.label }}"
+          git pull -q --rebase -X theirs origin main
           git push
