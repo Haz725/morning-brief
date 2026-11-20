@@ -330,12 +330,12 @@ def stale_codes(pf: dict, now: dt.datetime) -> list:
 
 
 def wait_until(seconds_before: int = 0):
-    """목표 시각(TARGET_TIME, 예: 09:00:10)보다 seconds_before 초 앞선 때까지 기다린다.
+    """목표 시각(TARGET_TIME, 예: 09:05:00)보다 seconds_before 초 앞선 때까지 기다린다.
     예약 실행이 늦을 때를 대비해 75분 전부터 시작하므로 최대 대기는 90분으로 둔다."""
     if os.environ.get("NO_WAIT") == "1":
         return
     now = dt.datetime.now(KST)
-    h, m, *sec = map(int, os.environ.get("TARGET_TIME", "09:00:10").split(":"))
+    h, m, *sec = map(int, os.environ.get("TARGET_TIME", "09:05:00").split(":"))
     target = now.replace(hour=h, minute=m, second=sec[0] if sec else 0, microsecond=0)
     gap = (target - now).total_seconds() - seconds_before
     if 0 < gap <= 90 * 60:
@@ -393,7 +393,7 @@ def main():
     market = collect_market()
     news = fetch_news(dt.datetime.now(KST))
 
-    # 2) 정각(09:00:10 / 15:00:00)에 현재가와 환율만 빠르게 조회 → 바로 알림
+    # 2) 정해진 시각(09:05 / 15:00)에 현재가와 환율만 빠르게 조회 → 바로 알림
     wait_until(0)
     now = dt.datetime.now(KST)
     pf = build_portfolio(cfg)
