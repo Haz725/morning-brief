@@ -123,6 +123,7 @@ def fetch_price(code: str) -> dict:
                 "change": change,
                 "change_pct": round(change / prev * 100, 2) if prev else 0.0,
                 "market_status": d.get("marketStatus", ""),
+                "traded_at": d.get("localTradedAt", ""),  # 마지막 체결 시각 (오늘 시세인지 확인용)
             }
         except Exception as e:
             errors.append(f"{url}: {e}")
@@ -144,6 +145,7 @@ def build_portfolio(cfg: dict) -> dict:
                     cache[code] = fetch_price(code)
                 q = cache[code]
                 statuses.add(q["market_status"])
+                row["traded_at"] = q["traded_at"]
                 cost, value = qty * avg, qty * q["price"]
                 row.update(price=q["price"], value=value, cost=cost, pnl=value - cost,
                            pnl_pct=(value / cost - 1) * 100 if cost else 0,
@@ -313,6 +315,20 @@ def day_off(day: dt.date):
     return holidays.KR(years=day.year, language="ko").get(day)
 
 
+def stale_codes(pf: dict, now: dt.datetime) -> list:
+    """오늘 09:00 이후 체결 시세가 아닌(=아직 전일 종가인) 종목코드 목록."""
+    opened = now.replace(hour=9, minute=0, second=0, microsecond=0)
+    codes = set()
+    for a in pf["accounts"]:
+        for r in a["holdings"]:
+            try:
+                if r.get("traded_at") and dt.datetime.fromisoformat(r["traded_at"]) < opened:
+                    codes.add(r["code"])
+            except ValueError:
+                pass
+    return sorted(codes)
+
+
 def wait_until(seconds_before: int = 0):
     """목표 시각(TARGET_TIME, 예: 09:00:10)보다 seconds_before 초 앞선 때까지 기다린다.
     예약 실행이 늦을 때를 대비해 75분 전부터 시작하므로 최대 대기는 90분으로 둔다."""
@@ -346,6 +362,8 @@ def build_notification(pf: dict, market: dict, show_amounts: bool) -> dict:
         lines.append(f"▶{a['name']} {a['pnl_pct']:+.2f}%  (오늘 {a['day_change_pct']:+.2f}%)")
     if pf.get("market_status") == "CLOSE":
         lines.append("오늘은 휴장일이라 전 거래일 종가 기준이에요")
+    elif pf.get("stale"):
+        lines.append("일부 종목은 아직 오늘 시세가 없어 전일 종가 기준이에요")
     if market_line(market, short=True):
         lines.append(market_line(market, short=True))
     up = pf["pnl_pct"] >= 0
@@ -379,6 +397,15 @@ def main():
     wait_until(0)
     now = dt.datetime.now(KST)
     pf = build_portfolio(cfg)
+    # 장 시작 직후엔 네이버가 잠깐 전일 종가를 줄 때가 있어서, 예약 실행은 오늘 체결가가 잡힐 때까지 최대 3분 재조회
+    if os.environ.get("SKIP_HOLIDAYS") == "1" and now.hour >= 9:
+        deadline = time.time() + 180
+        while stale_codes(pf, now) and time.time() < deadline:
+            print(f"아직 전일 종가예요({', '.join(stale_codes(pf, now))}). 5초 뒤 다시 조회합니다…")
+            time.sleep(5)
+            pf = build_portfolio(cfg)
+        now = dt.datetime.now(KST)
+    pf["stale"] = stale_codes(pf, now) if pf.get("market_status") != "CLOSE" else []
     market["fx"] = fetch_fx()
     market["headline"] = market_line(market)
 
